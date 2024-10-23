@@ -1,0 +1,43 @@
+# Скрипт для Nipper.
+# Дёргает .txt файлы из inputfolder, проверяет на уязвимости и выдаёт отчёты в outputfolder
+# Строки для замены путей: 7.
+# Выполняется как из .psl файла, так и из самого powershell с помощью вставки кода, если выполнение скриптов заблокировано. #
+ 
+#Объявляем путь к директории с файлов
+$Path = "C:\github\Nipper"
+ 
+# Перейти в директорию с nipper.exe
+cd $Path
+ 
+# Убедиться, что указанные пути верны
+$nipperExecutable = $Path+"\nipper.exe"
+$inputFolder = $Path+"\all_configs"
+$outputFolder = $Path+"\results"
+ 
+# Найти все .txt файлы
+$txtFiles = Get-ChildItem -Path $inputFolder -Filter *.txt
+ 
+if ($txtFiles.Count -eq 0) {
+    Write-Host "Не найдено .txt файлов в папке $inputFolder"
+} else {
+    foreach ($txtFile in $txtFiles) {
+        $fileName = [System.IO.Path]::GetFileNameWithoutExtension($txtFile.Name)
+        $baseName = $fileName.Split("_")[0,1] -join "_"
+        $outputFileName = "$baseName.html"
+        $outputFilePath = Join-Path -Path $outputFolder -ChildPath $outputFileName
+        $nipperCommand = "$nipperExecutable --input=`"$($txtFile.FullName)`" --output=`"$outputFilePath`" --css"
+ 
+        # Вывод информации для отладки
+        Write-Host "Executing command: $nipperCommand"
+ 
+        # Выполнение команды
+        Invoke-Expression $nipperCommand
+ 
+        # Проверка, создан ли выходной файл
+        if (Test-Path $outputFilePath) {
+            Write-Host "Файл $outputFileName успешно создан"
+        } else {
+            Write-Host "Ошибка: файл $outputFileName не создан"
+        }
+    }
+}
