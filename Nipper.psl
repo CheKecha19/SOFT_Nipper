@@ -63,86 +63,78 @@ function Get-NipperVulnerabilities {
         
         $vulnerabilities = @{}
         
-        # 1. Находим основной раздел Security Audit
-        if ($htmlContent -match '<div id="security">.*?<h2>2\. Security Audit<\/h2>(.*?)(?:<div id="|\z)') {
+        # 1. Ищем основной раздел Security Audit
+        if ($htmlContent -match '<h2>2\.\s*<a\s+name="SECURITYSECTION">Security\s+Audit<\/a><\/h2><br>(.*?)(?:<h2>|\z)') {
             $auditSection = $matches[1]
             
-            # 2. Находим все заголовки уязвимостей (2.X, кроме последнего)
-            $vulnHeaders = [regex]::Matches($auditSection, '<h3>2\.(\d+)\. (.*?)<\/h3>', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-            
-            # 3. Определяем номер последнего подраздела (Recommendations)
-            $lastSubsection = ($vulnHeaders | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Maximum).Maximum
-            
-            # 4. Собираем названия уязвимостей
-            foreach ($header in $vulnHeaders) {
-                $num = [int]$header.Groups[1].Value
-                $name = $header.Groups[2].Value -replace '<[^>]+>','' -replace '\s+',' '
-                $name = $name.Trim()
+            # 2. Ищем подраздел Recommendations (любой номер)
+            if ($auditSection -match '<h3>2\.(\d+)\.\s*Recommendations<\/h3><br>(.*?)(?:<h3>|\z)') {
+                $recommendationsSection = $matches[2]
                 
-                if ($num -lt $lastSubsection -and -not [string]::IsNullOrEmpty($name)) {
-                    $vulnerabilities[$name] = @{
-                        Section = "2.$num"
-                        Present = 1
-                        Details = @{
-                            Overall = ''
-                            Impact = ''
-                            Ease = ''
-                            Fix = ''
-                            Recommendation = ''
-                        }
-                    }
-                }
-            }
-            
-            # 5. Находим таблицу рекомендаций в последнем подразделе
-            if ($auditSection -match "<h3>2\.$lastSubsection\..*?Recommendations.*?<\/h3>.*?<table.*?>(.*?)<\/table>") {
-                $tableContent = $matches[1]
-                
-                # 6. Парсим строки таблицы
-                $rows = [regex]::Matches($tableContent, '<tr.*?>(.*?)<\/tr>', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-                
-                foreach ($row in $rows) {
-                    $rowContent = $row.Groups[1].Value
+                # 3. Ищем таблицу внутри этого подраздела
+                if ($recommendationsSection -match '<table.*?>(.*?)<\/table>') {
+                    $tableContent = $matches[1]
                     
-                    # Пропускаем заголовок таблицы
-                    if ($rowContent -match '<th' -or -not $rowContent -match '<td') { continue }
-                    
-                    # Извлекаем данные из ячеек
-                    $cells = [regex]::Matches($rowContent, '<td.*?>(.*?)<\/td>')
-                    
-                    if ($cells.Count -ge 6) {
-                        $issueName = $cells[0].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
-                        $issueName = $issueName.Trim()
+                    # 4. Извлекаем тело таблицы
+                    if ($tableContent -match '<tbody>(.*?)<\/tbody>') {
+                        $tbody = $matches[1]
                         
-                        $overall = $cells[1].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
-                        $overall = $overall.Trim()
+                        # 5. Парсим строки таблицы
+                        $rowMatches = [regex]::Matches($tbody, '<tr.*?>(.*?)<\/tr>', [System.Text.RegularExpressions.RegexOptions]::Singleline)
                         
-                        $impact = $cells[2].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
-                        $impact = $impact.Trim()
-                        
-                        $ease = $cells[3].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
-                        $ease = $ease.Trim()
-                        
-                        $fix = $cells[4].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
-                        $fix = $fix.Trim()
-                        
-                        $recommendation = $cells[5].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
-                        $recommendation = $recommendation.Trim()
-                        
-                        # Обновляем данные уязвимости
-                        if ($vulnerabilities.ContainsKey($issueName)) {
-                            $vulnerabilities[$issueName].Details.Overall = $overall
-                            $vulnerabilities[$issueName].Details.Impact = $impact
-                            $vulnerabilities[$issueName].Details.Ease = $ease
-                            $vulnerabilities[$issueName].Details.Fix = $fix
-                            $vulnerabilities[$issueName].Details.Recommendation = $recommendation
+                        foreach ($rowMatch in $rowMatches) {
+                            $row = $rowMatch.Groups[1].Value
+                            
+                            # Пропускаем пустые строки
+                            if ([string]::IsNullOrWhiteSpace($row)) { continue }
+                            
+                            # Извлекаем данные из ячеек
+                            $cellMatches = [regex]::Matches($row, '<td.*?>(.*?)<\/td>')
+                            
+                            # Проверяем, что в строке достаточно ячеек
+                            if ($cellMatches.Count -ge 6) {
+                                $issueName = $cellMatches[0].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
+                                $issueName = $issueName.Trim()
+                                
+                                $overall = $cellMatches[1].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
+                                $overall = $overall.Trim()
+                                
+                                $impact = $cellMatches[2].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
+                                $impact = $impact.Trim()
+                                
+                                $ease = $cellMatches[3].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
+                                $ease = $ease.Trim()
+                                
+                                $fix = $cellMatches[4].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
+                                $fix = $fix.Trim()
+                                
+                                $recommendation = $cellMatches[5].Groups[1].Value -replace '<[^>]+>','' -replace '\s+',' '
+                                $recommendation = $recommendation.Trim()
+                                
+                                # Добавляем уязвимость в результаты
+                                if (-not [string]::IsNullOrWhiteSpace($issueName)) {
+                                    $vulnerabilities[$issueName] = @{
+                                        Present = 1
+                                        Details = @{
+                                            Overall = $overall
+                                            Impact = $impact
+                                            Ease = $ease
+                                            Fix = $fix
+                                            Recommendation = $recommendation
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
         
-        Write-Host "Для устройства $deviceName найдено $($vulnerabilities.Count) уязвимостей" -ForegroundColor Green
+        $vulnCount = $vulnerabilities.Count
+        $statusColor = if ($vulnCount -gt 0) { "Green" } else { "Yellow" }
+        Write-Host "Для устройства $deviceName найдено $vulnCount уязвимостей" -ForegroundColor $statusColor
+        
         return @{
             DeviceName = $deviceName
             Vulnerabilities = $vulnerabilities
