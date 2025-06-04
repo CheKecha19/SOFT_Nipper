@@ -2,12 +2,12 @@
 import os
 
 # =============== КОНФИГУРАЦИЯ ===============
-NETWORK_DIR 		= r'\\uni-imc\cfgbak$'                                                          #   путь, откуда берутся конфигурации для сканирования. Обрати внимание, что ведётся поиск по последней созданной папке, если файлы лежат в корне или еще что то, то надо переписать функцию find_latest_folder():
-CONFIGS_DIR 		= r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\configs'                      	#   временная папка, куда будут сложены скопированные конфигурации
-REPORTS_DIR 		= r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\reports'                      	#   временная папка, куда будут сложены полученные репорты
-LOG_DIR 		    = r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\log'                           #   папка с логами
-FINAL_RESULTS_DIR 	= r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\final_results'          	#   папка, куда будет сложен финальный отчёт
-NIPPER_EXE 		    = r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\scanner\nipper.exe'         	#   путь к нипперу
+NETWORK_DIR 		= r'{net_folder}'                                                          #   путь, откуда берутся конфигурации для сканирования. Обрати внимание, что ведётся поиск по последней созданной папке, если файлы лежат в корне или еще что то, то надо переписать функцию find_latest_folder():
+CONFIGS_DIR 		= r'{folder}\configs'                      	#   временная папка, куда будут сложены скопированные конфигурации
+REPORTS_DIR 		= r'{folder}\reports'                      	#   временная папка, куда будут сложены полученные репорты
+LOG_DIR 		    = r'{folder}\log'                           #   папка с логами
+FINAL_RESULTS_DIR 	= r'{folder}\final_results'          	#   папка, куда будет сложен финальный отчёт
+NIPPER_EXE 		    = r'{folder}\scanner\nipper.exe'         	#   путь к нипперу
 # ============================================
 # Выбор девайса
 SCANNED_DEVICE = '--procurve' 
