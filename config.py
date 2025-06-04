@@ -2,16 +2,13 @@
 import os
 
 # =============== КОНФИГУРАЦИЯ ===============
-#можно вписывать сетевые папки, если это необходимо
-# {ПУТЬ К ПАПКЕ} - менять вместе с {}
-
-NETWORK_DIR = r'{ПУТЬ К ПАПКЕ}'                                                          #   путь, откуда берутся конфигурации для сканирования. Обрати внимание, что ведётся поиск по последней созданной папке, если файлы лежат в корне или еще что то, то надо переписать функцию find_latest_folder():
-CONFIGS_DIR = r'{ПУТЬ К ПАПКЕ}'                      #   временная папка, куда будут сложены скопированные конфигурации
-REPORTS_DIR = r'{ПУТЬ К ПАПКЕ}'                      #   временная папка, куда будут сложены полученные репорты
-LOG_DIR = r'{ПУТЬ К ПАПКЕ}'                              #   папка с логами
-FINAL_RESULTS_DIR = r'{ПУТЬ К ПАПКЕ}'          #   папка, куда будет сложен финальный отчёт
-NIPPER_EXE = r'{ПУТЬ К ПАПКЕ}\nipper.exe'         #   путь к нипперу
-
+NETWORK_DIR 		= r'\\uni-imc\cfgbak$'                                                          #   путь, откуда берутся конфигурации для сканирования. Обрати внимание, что ведётся поиск по последней созданной папке, если файлы лежат в корне или еще что то, то надо переписать функцию find_latest_folder():
+CONFIGS_DIR 		= r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\configs'                      	#   временная папка, куда будут сложены скопированные конфигурации
+REPORTS_DIR 		= r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\reports'                      	#   временная папка, куда будут сложены полученные репорты
+LOG_DIR 		    = r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\log'                           #   папка с логами
+FINAL_RESULTS_DIR 	= r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\final_results'          	#   папка, куда будет сложен финальный отчёт
+NIPPER_EXE 		    = r'\\UNI-FS02\Share$\ОКБ\Vulnerabilities\Nipper\scanner\nipper.exe'         	#   путь к нипперу
+# ============================================
 # Выбор девайса
 SCANNED_DEVICE = '--procurve' 
 
@@ -38,13 +35,24 @@ SCANNED_DEVICE = '--procurve'
     --nortel-switch  Nortel Ethernet Routing Switch 8300
     --sonicos        SonicWall SonicOS Firewall
 """
-
+# ============================================
 # Настройка логирования
 LOG_LEVEL = 'INFO'  # Изменено на строку для гибкости
 LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 LOG_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 # ============================================
-
-# Дополнительные проверки
+# Удаление лишних папок после выполнения скрипта, если необходимо
+CLEANUP_AFTER_SUCCESS = True  # Флаг для управления очисткой
+# ============================================
+# Дополнительные проверки, создание папок, если их нет.
 for dir_path in [CONFIGS_DIR, REPORTS_DIR, LOG_DIR, FINAL_RESULTS_DIR]:
     os.makedirs(dir_path, exist_ok=True)
+# ============================================
+# Настройка режима работы
+FILE_SOURCE_MODE = 'recent_files'  # Варианты: 'latest_folder', 'recent_files', 'both'
+MAX_FILE_AGE_DAYS = 60     # Используется в режимах 'recent_files' и 'both'
+
+VALID_MODES = ['latest_folder', 'recent_files', 'both']
+if FILE_SOURCE_MODE not in VALID_MODES:
+    raise ValueError(f"Invalid FILE_SOURCE_MODE. Must be one of: {', '.join(VALID_MODES)}")
+# ============================================
