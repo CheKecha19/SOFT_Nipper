@@ -164,7 +164,7 @@ def process_with_nipper():
             
         total = len(files)
         logging.info(f"Обработка {total} файлов nipper'ом...")
-        progress = ProgressBar(total, "Прогресс")
+        progress = ProgressBar(total, "Обработка файлов")
         
         for filename in files:
             input_path = os.path.join(CONFIGS_DIR, filename)
@@ -204,7 +204,7 @@ def rename_configs():
             
         total = len(files)
         logging.info(f"Переименование {total} файлов...")
-        progress = ProgressBar(total, "Прогресс")
+        progress = ProgressBar(total, "Переименование")
         ip_pattern = re.compile(r'^\d{1,3}(\.\d{1,3}){3}')  # Регулярка для поиска IP
         
         for filename in files:
