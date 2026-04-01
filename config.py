@@ -1,14 +1,18 @@
-# config.py
 import os
 
+# =============== БАЗОВЫЙ ПУТЬ ===============
+BASIC_PATH = r'C:\Users\cu-nazarov-na\Desktop\Nipper__доработка'
+
 # =============== КОНФИГУРАЦИЯ ===============
-NETWORK_DIR 		= r'{net_folder}'                                                          #   путь, откуда берутся конфигурации для сканирования. Обрати внимание, что ведётся поиск по последней созданной папке, если файлы лежат в корне или еще что то, то надо переписать функцию find_latest_folder():
-CONFIGS_DIR 		= r'{folder}\configs'                      	#   временная папка, куда будут сложены скопированные конфигурации
-REPORTS_DIR 		= r'{folder}\reports'                      	#   временная папка, куда будут сложены полученные репорты
-LOG_DIR 		    = r'{folder}\log'                           #   папка с логами
-FINAL_RESULTS_DIR 	= r'{folder}\final_results'          	#   папка, куда будет сложен финальный отчёт
-NIPPER_EXE 		    = r'{folder}\scanner\nipper.exe'         	#   путь к нипперу
-# ============================================
+NETWORK_DIR             = r'\\uni-imc\cfgbak$'
+CONFIGS_DIR             = os.path.join(BASIC_PATH, 'folders', 'configs')
+REPORTS_DIR             = os.path.join(BASIC_PATH, 'folders', 'reports')
+LOG_DIR                 = os.path.join(BASIC_PATH, 'folders', 'log')
+FINAL_RESULTS_DIR       = os.path.join(BASIC_PATH, 'folders', 'final_results')
+COMPARISON_DIR          = os.path.join(BASIC_PATH, 'folders', 'comparison_results')
+TASK_DISTRIBUTION_DIR   = os.path.join(BASIC_PATH, 'folders', 'отправить в задачи')
+NIPPER_EXE              = os.path.join(BASIC_PATH, 'folders', 'nipper_exe', 'nipper.exe')
+
 # Выбор девайса
 SCANNED_DEVICE = '--procurve' 
 
@@ -37,22 +41,61 @@ SCANNED_DEVICE = '--procurve'
 """
 # ============================================
 # Настройка логирования
-LOG_LEVEL = 'INFO'  # Изменено на строку для гибкости
+LOG_LEVEL = 'INFO'
 LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 LOG_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+LOG_MAX_SIZE = 10 * 1024 * 1024  # 10 MB
+LOG_BACKUP_COUNT = 5
+
 # ============================================
-# Удаление лишних папок после выполнения скрипта, если необходимо
-CLEANUP_AFTER_SUCCESS = True  # Флаг для управления очисткой
+# Удаление лишних папок после выполнения скрипта
+CLEANUP_AFTER_SUCCESS = False
+
 # ============================================
-# Дополнительные проверки, создание папок, если их нет.
-for dir_path in [CONFIGS_DIR, REPORTS_DIR, LOG_DIR, FINAL_RESULTS_DIR]:
-    os.makedirs(dir_path, exist_ok=True)
+# Создание структуры задач
+CREATE_TASK_STRUCTURE = True
+
 # ============================================
 # Настройка режима работы
-FILE_SOURCE_MODE = 'recent_files'  # Варианты: 'latest_folder', 'recent_files', 'both'
-MAX_FILE_AGE_DAYS = 60     # Используется в режимах 'recent_files' и 'both'
+FILE_SOURCE_MODE = 'recent_files'
+MAX_FILE_AGE_DAYS = 60
 
 VALID_MODES = ['latest_folder', 'recent_files', 'both']
 if FILE_SOURCE_MODE not in VALID_MODES:
     raise ValueError(f"Invalid FILE_SOURCE_MODE. Must be one of: {', '.join(VALID_MODES)}")
+
 # ============================================
+# Настройка сравнения отчётов
+COMPARE_WITH_PREVIOUS = True
+COMPARISON_REPORT_PREFIX = 'comparison_report'
+REPORT_PREFIX = 'scan_summary'
+
+# ============================================
+# Параллельная обработка
+MAX_WORKERS = 1
+
+# ============================================
+# Исключение правил из финального отчёта
+# Каждая строка интерпретируется как регулярное выражение (Python re).
+# Если правило начинается с '^' и заканчивается '$', будет точное совпадение.
+# Можно использовать просто подстроку – тогда будут исключены все правила,
+# содержащие её.
+EXCLUDED_ISSUES = [
+    # Примеры:
+    # r"^SNMP Community",        # все, начинающиеся с "SNMP Community"
+    # r"Telnet",                 # любые, содержащие "Telnet"
+    # r"Unencrypted\s+Protocol", # более сложная регулярка
+
+    r"A User Was Configured With No Password",      # Не получилось воспользоваться учетной записью оператора без проля. Не подтвердилось.
+    r"No Pre-Logon Banner Message",                 # не является уязвимостью
+    r"Users Were Configured With No Password",      # Не получилось воспользоваться учетной записью оператора без проля. Не подтвердилось.
+    r"Clear Text Telnet Service Enabled",           # Отработано
+    r"No Connection Timeout",                       # Не верные данные сканера. Коммутаторы Comware по-умолчанию завершают неактивные сессии через 20 минут
+    r"Weak Administrative Host Access Restrictions" 
+]
+
+# ============================================
+# Дополнительные проверки
+for dir_path in [CONFIGS_DIR, REPORTS_DIR, LOG_DIR, FINAL_RESULTS_DIR,
+                 COMPARISON_DIR, TASK_DISTRIBUTION_DIR]:
+    os.makedirs(dir_path, exist_ok=True)

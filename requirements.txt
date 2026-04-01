@@ -1,3 +1,4 @@
-pandas
-openpyxl
-beautifulsoup4
+pandas==2.0.3
+openpyxl==3.1.2
+beautifulsoup4==4.12.2
+tqdm==4.66.1
