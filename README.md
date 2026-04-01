@@ -74,9 +74,9 @@ SOFT Nipper — инструмент для автоматизированной
 4. идём в `config.py` и меняем пути в переменных, откуда и куда будут отправляться данные. В моём случае это выглядит так:
 
 ```python
-BASIC_PATH = r'C:\Users\cu-nazarov-na\Desktop\Nipper__доработка'   # базовый путь
+BASIC_PATH = r'C:\Users\user\Desktop\Nipper__доработка'   # базовый путь
 
-NETWORK_DIR         = r'\\uni-imc\cfgbak$'
+NETWORK_DIR         = r'\\path\cfgbak$'
 CONFIGS_DIR         = os.path.join(BASIC_PATH, 'folders', 'configs')
 REPORTS_DIR         = os.path.join(BASIC_PATH, 'folders', 'reports')
 LOG_DIR             = os.path.join(BASIC_PATH, 'folders', 'log')
